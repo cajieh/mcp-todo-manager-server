@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "todo-manager": {
+      "command": "python3",
+      "args": ["todo_server.py"],
+      "cwd": "/Users/cajieh/Documents/projects/mcp-todo-manager-server"
+    }
+  }
+}
