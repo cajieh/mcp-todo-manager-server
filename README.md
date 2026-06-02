@@ -39,18 +39,13 @@ A simple todo manager built as an MCP (Model Context Protocol) server using Fast
 
 ### Storage Path
 
-The server stores tasks in a `todos.json` file. By default, this is set to:
+The server stores tasks in a `todos.json` file. The location is configurable via the `TODO_DATA_FILE` environment variable:
 
-```
-/Users/cajieh/Documents/projects/todos.json
+```bash
+export TODO_DATA_FILE="/path/to/your/todos.json"
 ```
 
-**Important**: Before running the server on your system, update the `DATA_FILE` path in `todo_server.py` to a location appropriate for your environment:
-
-```python
-# File path for persistent storage
-DATA_FILE = "/path/to/your/todos.json"
-```
+If not set, it defaults to `todos.json` in the current working directory.
 
 ## Running the Server
 

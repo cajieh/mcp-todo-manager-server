@@ -12,8 +12,8 @@ from fastmcp import FastMCP
 # Initialize the MCP server
 mcp = FastMCP("TodoManager")
 
-# File path for persistent storage
-DATA_FILE = "/Users/cajieh/Documents/projects/todos.json"
+# File path for persistent storage (configurable via environment variable)
+DATA_FILE = os.environ.get("TODO_DATA_FILE", "todos.json")
 
 # In-memory storage for tasks
 tasks: list[dict] = []
