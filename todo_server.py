@@ -5,15 +5,49 @@ Based on the Machine Learning Mastery tutorial for building MCP servers.
 This server exposes tools, resources, and prompts for managing TODO items.
 """
 
+import json
+import os
 from datetime import datetime
 from fastmcp import FastMCP
 
 # Initialize the MCP server
 mcp = FastMCP("TodoManager")
 
+# File path for persistent storage
+DATA_FILE = "/Users/cajieh/Documents/projects/todos.json"
+
 # In-memory storage for tasks
 tasks: list[dict] = []
 task_id_counter: int = 1
+
+
+def load_tasks() -> None:
+    """Load tasks from the JSON file."""
+    global tasks, task_id_counter
+
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r") as f:
+                data = json.load(f)
+                tasks = data.get("todos", [])
+                task_id_counter = data.get("next_id", 1)
+        except (json.JSONDecodeError, IOError):
+            tasks = []
+            task_id_counter = 1
+
+
+def save_tasks() -> None:
+    """Save tasks to the JSON file."""
+    data = {
+        "todos": tasks,
+        "next_id": task_id_counter
+    }
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+# Load tasks on startup
+load_tasks()
 
 
 # ============== TOOLS ==============
@@ -43,6 +77,7 @@ def add_todo(title: str, description: str = "") -> dict:
 
     tasks.append(task)
     task_id_counter += 1
+    save_tasks()
 
     return {"message": f"Task '{title}' added successfully", "task": task}
 
@@ -62,6 +97,7 @@ def complete_task(task_id: int) -> dict:
         if task["id"] == task_id:
             task["status"] = "completed"
             task["completed_at"] = datetime.now().isoformat()
+            save_tasks()
             return {"message": f"Task {task_id} marked as completed", "task": task}
 
     return {"error": f"Task with ID {task_id} not found"}
@@ -83,6 +119,7 @@ def delete_task(task_id: int) -> dict:
     for i, task in enumerate(tasks):
         if task["id"] == task_id:
             deleted_task = tasks.pop(i)
+            save_tasks()
             return {"message": f"Task '{deleted_task['title']}' deleted successfully"}
 
     return {"error": f"Task with ID {task_id} not found"}
@@ -107,6 +144,7 @@ def update_task(task_id: int, title: str = None, description: str = None) -> dic
                 task["title"] = title
             if description is not None:
                 task["description"] = description
+            save_tasks()
             return {"message": f"Task {task_id} updated successfully", "task": task}
 
     return {"error": f"Task with ID {task_id} not found"}
