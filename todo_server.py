@@ -366,24 +366,35 @@ Please suggest:
 def task_review_workflow(focus_priority: str = "high") -> str:
     """
     Action-oriented task review workflow for batch operations.
-    Filters by priority and identifies actionable items requiring immediate attention.
+    Displays all tasks and identifies actionable items requiring immediate attention.
     """
     pending_tasks = [t for t in tasks if t["status"] == "pending"]
+    completed_tasks = [t for t in tasks if t["status"] == "completed"]
 
     # Filter by priority
     priority_tasks = [t for t in pending_tasks if t.get("priority") == focus_priority]
 
-    # Build task lists for prompt
+    # Build all tasks list
+    all_tasks_list = "\n".join([
+        f"  - [{t['id']}] {t['title']} ({t.get('priority', 'medium').upper()}) - {t['status'].upper()}"
+        for t in tasks
+    ]) if tasks else "  No tasks"
+
+    # Build priority tasks list
     priority_list = "\n".join([
         f"  - [{t['id']}] {t['title']}"
         for t in priority_tasks
     ]) if priority_tasks else "  No tasks at this priority level"
 
-    # All pending task IDs for batch operations
+    # All task IDs for batch operations
     all_pending_ids = [t["id"] for t in pending_tasks]
+    all_completed_ids = [t["id"] for t in completed_tasks]
     priority_task_ids = [t["id"] for t in priority_tasks]
 
     return f"""You are a task operations manager executing a review workflow.
+
+=== ALL TASKS ===
+{all_tasks_list}
 
 === FOCUS: {focus_priority.upper()} PRIORITY TASKS ===
 {priority_list}
@@ -400,9 +411,10 @@ You can perform these operations using the available tools:
 
 3. DELETE TASKS: Use delete_task(task_id)
    - Remove obsolete or duplicate tasks
+   - Completed task IDs: {all_completed_ids}
 
 === WORKFLOW INSTRUCTIONS ===
-1. List all {focus_priority.upper()} priority tasks with their status
+1. List all tasks with their status
 2. Propose specific batch operations (with exact task IDs)
 3. Wait for user confirmation before executing any changes
 4. Execute approved operations and report results
