@@ -92,6 +92,7 @@ The server is configured to work with Claude Code via the `.mcp.json` file. Once
 |--------|-------------|
 | `task_summary` | Generates a summary of current todo status |
 | `daily_planning` | Generates a daily planning prompt based on pending todos |
+| `task_review_workflow` | Orchestrates a priority-based task review with user confirmation before state changes |
 
 ## License
 
