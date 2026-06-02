@@ -1,5 +1,5 @@
 """
-TODO MCP Server - A simple task tracker using FastMCP
+TODO MCP Server - A simple todo items manager using FastMCP
 
 This server exposes tools, resources, and prompts for managing TODO items.
 """
@@ -55,7 +55,7 @@ VALID_PRIORITIES = ["high", "medium", "low"]
 
 
 @mcp.tool()
-def add_todo(title: str, description: str = "", priority: str = "medium", deadline: str = None) -> dict:
+def add_todo(title: str, description: str = "", priority: str = "medium") -> dict:
     """
     Add a new task to the TODO list.
 
@@ -63,7 +63,6 @@ def add_todo(title: str, description: str = "", priority: str = "medium", deadli
         title: The title of the task
         description: Optional detailed description of the task
         priority: Task priority level ('high', 'medium', or 'low'). Defaults to 'medium'
-        deadline: Optional deadline in ISO format (e.g., '2026-06-15' or '2026-06-15T14:00:00')
 
     Returns:
         The created task object
@@ -78,7 +77,6 @@ def add_todo(title: str, description: str = "", priority: str = "medium", deadli
         "title": title,
         "description": description,
         "priority": priority,
-        "deadline": deadline,
         "status": "pending",
         "created_at": datetime.now().isoformat(),
         "completed_at": None
@@ -135,16 +133,15 @@ def delete_task(task_id: int) -> dict:
 
 
 @mcp.tool()
-def update_task(task_id: int, title: str = None, description: str = None, priority: str = None, deadline: str = None) -> dict:
+def update_task(task_id: int, title: str = None, description: str = None, priority: str = None) -> dict:
     """
-    Update an existing task's title, description, priority, or deadline.
+    Update an existing task's title, description, or priority.
 
     Args:
         task_id: The ID of the task to update
         title: New title (optional)
         description: New description (optional)
         priority: New priority level - 'high', 'medium', or 'low' (optional)
-        deadline: New deadline in ISO format (optional)
 
     Returns:
         The updated task object or error message
@@ -160,8 +157,6 @@ def update_task(task_id: int, title: str = None, description: str = None, priori
                 task["description"] = description
             if priority is not None:
                 task["priority"] = priority
-            if deadline is not None:
-                task["deadline"] = deadline
             save_tasks()
             return {"message": f"Task {task_id} updated successfully", "task": task}
 
@@ -218,8 +213,6 @@ def get_all_tasks() -> str:
         if task["description"]:
             lines.append(f"    Description: {task['description']}")
         lines.append(f"    Priority: {priority.upper()}")
-        if task.get("deadline"):
-            lines.append(f"    Deadline: {task['deadline']}")
         lines.append(f"    Created: {task['created_at']}")
         if task["completed_at"]:
             lines.append(f"    Completed: {task['completed_at']}")
@@ -250,8 +243,6 @@ def get_pending_tasks() -> str:
         if task["description"]:
             lines.append(f"    Description: {task['description']}")
         lines.append(f"    Priority: {priority.upper()}")
-        if task.get("deadline"):
-            lines.append(f"    Deadline: {task['deadline']}")
         lines.append(f"    Created: {task['created_at']}")
         lines.append("")
 
@@ -323,24 +314,6 @@ def task_summary() -> str:
     else:
         oldest_tasks = "  No pending tasks"
 
-    # Overdue tasks (tasks past deadline)
-    overdue_tasks = []
-    for task in pending_tasks:
-        if task.get("deadline"):
-            try:
-                deadline = datetime.fromisoformat(task["deadline"].split("T")[0])
-                if deadline < now:
-                    days_overdue = (now - deadline).days
-                    overdue_tasks.append({"id": task["id"], "title": task["title"], "days_overdue": days_overdue})
-            except ValueError:
-                pass
-
-    overdue_info = ""
-    if overdue_tasks:
-        overdue_info = f"\nOVERDUE TASKS ({len(overdue_tasks)}):\n" + "\n".join(
-            [f"  - Task #{t['id']} '{t['title']}': {t['days_overdue']} days overdue" for t in overdue_tasks]
-        )
-
     return f"""Provide a statistical analysis of my TODO list based on these metrics:
 
 === TASK COUNTS ===
@@ -356,9 +329,8 @@ Low priority: {low_priority}
 
 === AGING ANALYSIS (Oldest Pending Tasks) ===
 {oldest_tasks}
-{overdue_info}
 
-Present these statistics clearly. Calculate averages if helpful. Identify any concerning trends (e.g., low completion rate, many old tasks, overdue items)."""
+Present these statistics clearly. Calculate averages if helpful. Identify any concerning trends (e.g., low completion rate, many old tasks)."""
 
 
 @mcp.prompt()
@@ -383,66 +355,19 @@ Please suggest:
 @mcp.prompt()
 def task_review_workflow(focus_priority: str = "high") -> str:
     """
-    Action-oriented task review workflow for batch operations and deadline enforcement.
+    Action-oriented task review workflow for batch operations.
     Filters by priority and identifies actionable items requiring immediate attention.
     """
-    from datetime import datetime
-
-    now = datetime.now()
     pending_tasks = [t for t in tasks if t["status"] == "pending"]
 
     # Filter by priority
     priority_tasks = [t for t in pending_tasks if t.get("priority") == focus_priority]
 
-    # Identify overdue tasks
-    overdue_tasks = []
-    for task in pending_tasks:
-        if task.get("deadline"):
-            try:
-                deadline = datetime.fromisoformat(task["deadline"].split("T")[0])
-                if deadline < now:
-                    days_overdue = (now - deadline).days
-                    overdue_tasks.append({
-                        "id": task["id"],
-                        "title": task["title"],
-                        "priority": task.get("priority", "medium"),
-                        "days_overdue": days_overdue
-                    })
-            except ValueError:
-                pass
-
-    # Identify tasks approaching deadline (within 3 days)
-    approaching_deadline = []
-    for task in pending_tasks:
-        if task.get("deadline"):
-            try:
-                deadline = datetime.fromisoformat(task["deadline"].split("T")[0])
-                days_until = (deadline - now).days
-                if 0 <= days_until <= 3:
-                    approaching_deadline.append({
-                        "id": task["id"],
-                        "title": task["title"],
-                        "priority": task.get("priority", "medium"),
-                        "days_until": days_until
-                    })
-            except ValueError:
-                pass
-
     # Build task lists for prompt
     priority_list = "\n".join([
-        f"  - [{t['id']}] {t['title']} (deadline: {t.get('deadline', 'none')})"
+        f"  - [{t['id']}] {t['title']}"
         for t in priority_tasks
     ]) if priority_tasks else "  No tasks at this priority level"
-
-    overdue_list = "\n".join([
-        f"  - [{t['id']}] {t['title']} ({t['priority'].upper()}) - {t['days_overdue']} days overdue"
-        for t in overdue_tasks
-    ]) if overdue_tasks else "  No overdue tasks"
-
-    approaching_list = "\n".join([
-        f"  - [{t['id']}] {t['title']} ({t['priority'].upper()}) - {t['days_until']} days remaining"
-        for t in approaching_deadline
-    ]) if approaching_deadline else "  No tasks approaching deadline"
 
     # All pending task IDs for batch operations
     all_pending_ids = [t["id"] for t in pending_tasks]
@@ -453,13 +378,6 @@ def task_review_workflow(focus_priority: str = "high") -> str:
 === FOCUS: {focus_priority.upper()} PRIORITY TASKS ===
 {priority_list}
 
-=== DEADLINE ENFORCEMENT ===
-OVERDUE (Requires immediate action):
-{overdue_list}
-
-APPROACHING DEADLINE (Within 3 days):
-{approaching_list}
-
 === AVAILABLE BATCH OPERATIONS ===
 You can perform these operations using the available tools:
 
@@ -468,23 +386,16 @@ You can perform these operations using the available tools:
    - All pending IDs: {all_pending_ids}
 
 2. UPDATE PRIORITY: Use update_task(task_id, priority="high|medium|low")
-   - Escalate overdue tasks to high priority
    - Adjust priorities based on urgency
 
-3. SET/UPDATE DEADLINES: Use update_task(task_id, deadline="YYYY-MM-DD")
-   - Add deadlines to tasks without them
-   - Extend deadlines if needed
-
-4. DELETE TASKS: Use delete_task(task_id)
+3. DELETE TASKS: Use delete_task(task_id)
    - Remove obsolete or duplicate tasks
 
 === WORKFLOW INSTRUCTIONS ===
 1. List all {focus_priority.upper()} priority tasks with their status
-2. Flag any overdue tasks and recommend priority escalation
-3. Identify tasks approaching deadline that need attention
-4. Propose specific batch operations (with exact task IDs)
-5. Wait for user confirmation before executing any changes
-6. Execute approved operations and report results
+2. Propose specific batch operations (with exact task IDs)
+3. Wait for user confirmation before executing any changes
+4. Execute approved operations and report results
 
 Always ask for explicit user confirmation before making any changes."""
 
