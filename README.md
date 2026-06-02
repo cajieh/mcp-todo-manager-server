@@ -35,6 +35,23 @@ A simple todo manager built as an MCP (Model Context Protocol) server using Fast
    pip install -r requirements.txt
    ```
 
+## Configuration
+
+### Storage Path
+
+The server stores tasks in a `todos.json` file. By default, this is set to:
+
+```
+/Users/cajieh/Documents/projects/todos.json
+```
+
+**Important**: Before running the server on your system, update the `DATA_FILE` path in `todo_server.py` to a location appropriate for your environment:
+
+```python
+# File path for persistent storage
+DATA_FILE = "/path/to/your/todos.json"
+```
+
 ## Running the Server
 
 ### Standalone Mode
