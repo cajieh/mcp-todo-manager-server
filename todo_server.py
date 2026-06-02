@@ -289,10 +289,8 @@ def get_completed_tasks() -> str:
 def task_summary() -> str:
     """
     Generate a purely statistical summary of task metrics.
-    Focuses on counts, completion rates, aging analysis, and priority distribution.
+    Focuses on counts, completion rates, and priority distribution.
     """
-    from datetime import datetime
-
     total = len(tasks)
     pending_tasks = [t for t in tasks if t["status"] == "pending"]
     completed_tasks = [t for t in tasks if t["status"] == "completed"]
@@ -307,23 +305,6 @@ def task_summary() -> str:
     medium_priority = len([t for t in pending_tasks if t.get("priority") == "medium"])
     low_priority = len([t for t in pending_tasks if t.get("priority") == "low"])
 
-    # Aging analysis
-    now = datetime.now()
-    aging_info = []
-    for task in pending_tasks:
-        created = datetime.fromisoformat(task["created_at"])
-        age_days = (now - created).days
-        aging_info.append({"id": task["id"], "title": task["title"], "age_days": age_days})
-
-    # Sort by age (oldest first)
-    aging_info.sort(key=lambda x: x["age_days"], reverse=True)
-
-    oldest_tasks = ""
-    if aging_info:
-        oldest_tasks = "\n".join([f"  - Task #{t['id']} '{t['title']}': {t['age_days']} days old" for t in aging_info[:5]])
-    else:
-        oldest_tasks = "  No pending tasks"
-
     return f"""Provide a statistical analysis of my TODO list based on these metrics:
 
 === TASK COUNTS ===
@@ -337,10 +318,7 @@ High priority: {high_priority}
 Medium priority: {medium_priority}
 Low priority: {low_priority}
 
-=== AGING ANALYSIS (Oldest Pending Tasks) ===
-{oldest_tasks}
-
-Present these statistics clearly. Calculate averages if helpful. Identify any concerning trends (e.g., low completion rate, many old tasks)."""
+Present these statistics clearly. Calculate averages if helpful. Identify any concerning trends (e.g., low completion rate)."""
 
 
 @mcp.prompt()
