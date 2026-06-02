@@ -1,7 +1,6 @@
 """
 TODO MCP Server - A simple task tracker using FastMCP
 
-Based on the Machine Learning Mastery tutorial for building MCP servers.
 This server exposes tools, resources, and prompts for managing TODO items.
 """
 
