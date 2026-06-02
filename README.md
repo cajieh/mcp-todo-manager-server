@@ -37,15 +37,23 @@ A simple todo manager built as an MCP (Model Context Protocol) server using Fast
 
 ## Configuration
 
-### Storage Path
+### Environment Variables
 
-The server stores tasks in a `todos.json` file. The location is configurable via the `TODO_DATA_FILE` environment variable:
+The server supports the following environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `TODO_SERVER_CWD` | Working directory for the server | Current directory |
+| `TODO_DATA_FILE` | Path to the JSON file for task storage | `todos.json` in working directory |
+
+Example configuration:
 
 ```bash
-export TODO_DATA_FILE="/path/to/your/todos.json"
+export TODO_SERVER_CWD="/path/to/mcp-todo-manager-server"
+export TODO_DATA_FILE="/path/to/todos.json"
 ```
 
-If not set, it defaults to `todos.json` in the current working directory.
+Add these to your shell profile (`.zshrc` / `.bashrc`) for persistence.
 
 ## Running the Server
 
