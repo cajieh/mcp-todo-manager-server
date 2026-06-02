@@ -72,11 +72,11 @@ The server is configured to work with Claude Code via the `.mcp.json` file. Once
 
 | Tool | Description |
 |------|-------------|
-| `add_todo` | Add a new todo with title and optional description |
+| `add_todo` | Add a new todo with title, optional description, priority, and deadline |
 | `complete_task` | Mark a todo as completed by ID |
 | `delete_task` | Remove a todo from the list by ID |
-| `update_task` | Update a todo's title or description |
-| `list_tasks` | List all todos, optionally filtered by status |
+| `update_task` | Update a todo's title, description, priority, or deadline |
+| `list_tasks` | List all todos, optionally filtered by status and/or priority |
 
 ## Available Resources
 
