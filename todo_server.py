@@ -5,12 +5,22 @@ This server exposes tools, resources, and prompts for managing TODO items.
 """
 
 import json
+import logging
 import os
+import sys
 from datetime import datetime
 from fastmcp import FastMCP
 
+# Configure logging to stderr (required for STDIO transport - never use stdout)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    stream=sys.stderr
+)
+logger = logging.getLogger("TodoManager")
+
 # Initialize the MCP server
-mcp = FastMCP("TodoManager")
+mcp = FastMCP("TodoManager", version="1.0.0")
 
 # File path for persistent storage (configurable via environment variable)
 DATA_FILE = os.environ.get("TODO_DATA_FILE", "todos.json")
@@ -402,4 +412,5 @@ Always ask for explicit user confirmation before making any changes."""
 
 if __name__ == "__main__":
     # Run the server using stdio transport (for Claude Code integration)
-    mcp.run()
+    logger.info("Starting TodoManager MCP Server")
+    mcp.run(transport="stdio")
