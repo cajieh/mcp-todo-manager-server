@@ -7,7 +7,7 @@ A simple todo manager built as an MCP (Model Context Protocol) server using Fast
 - **Tools**: Add, complete, update, delete, and list todos
 - **Resources**: Access formatted views of all, pending, or completed todos
 - **Prompts**: Generate todo summaries and daily planning prompts
-- **In-memory storage**: Lightweight todo management for development and testing
+- **Persistent storage**: Tasks are saved to a JSON file and automatically loaded on startup, ensuring your todos survive server restarts
 
 ## Prerequisites
 
